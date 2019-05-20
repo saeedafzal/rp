@@ -2,8 +2,9 @@ package com.hknight.lunch;
 
 import javax.swing.*;
 import java.awt.*;
-
-import static com.hknight.lunch.Controller.log;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.IOException;
 
 class Window extends JFrame {
 
@@ -11,11 +12,14 @@ class Window extends JFrame {
     private final Controller controller = new Controller();
     private JList<String> list;
     private JLabel label;
+    private File currentSaveFile;
 
     Window() {
         setTitle("Lunch Picker");
         setSize(450, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        setJMenuBar(createMenuBar());
 
         final JPanel contentPane = new JPanel();
         contentPane.setLayout(new BorderLayout());
@@ -26,6 +30,43 @@ class Window extends JFrame {
 
         contentPane.add(splitPane, BorderLayout.CENTER);
         setContentPane(contentPane);
+    }
+
+    private JMenuBar createMenuBar() {
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File(System.getProperties().getProperty("user.home")));
+
+        final JMenuBar menuBar = new JMenuBar();
+
+        final JMenu fileMenu = new JMenu("File");
+        final JMenuItem saveAsMenu = new JMenuItem("Save As...");
+        saveAsMenu.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() + ActionEvent.SHIFT_MASK));
+        saveAsMenu.addActionListener(e -> currentSaveFile = controller.saveWithChooser(listModel, chooser, currentSaveFile, this));
+
+        final JMenuItem saveMenu = new JMenuItem("Save");
+        saveMenu.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        saveMenu.addActionListener(e -> {
+            if (currentSaveFile != null) {
+                try {
+                    controller.writeToFile(listModel, currentSaveFile);
+                } catch (IOException io) {
+                    io.printStackTrace();
+                }
+            } else {
+                currentSaveFile = controller.saveWithChooser(listModel, chooser, currentSaveFile, this);
+            }
+        });
+
+        final JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.addActionListener(e -> System.exit(0));
+
+        fileMenu.add(saveMenu);
+        fileMenu.add(saveAsMenu);
+        fileMenu.addSeparator();
+        fileMenu.add(exitItem);
+
+        menuBar.add(fileMenu);
+        return menuBar;
     }
 
     private JPanel createControls() {
