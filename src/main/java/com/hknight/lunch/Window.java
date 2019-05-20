@@ -16,6 +16,7 @@ class Window extends JFrame {
     private JList<String> list;
     private JLabel label, fileLabel = new JLabel();
     private File currentSaveFile;
+    private JPanel filePanel;
 
     Window() {
         setTitle("Lunch Picker");
@@ -31,8 +32,7 @@ class Window extends JFrame {
         splitPane.setLeftComponent(createControls());
         splitPane.setRightComponent(createRightPanel());
 
-        fileLabel.setVisible(false);
-        contentPane.add(fileLabel, BorderLayout.NORTH);
+        contentPane.add(fileLabel(), BorderLayout.NORTH);
         contentPane.add(splitPane, BorderLayout.CENTER);
         setContentPane(contentPane);
     }
@@ -49,7 +49,9 @@ class Window extends JFrame {
         saveAsMenu.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() + ActionEvent.SHIFT_MASK));
         saveAsMenu.addActionListener(e -> {
             currentSaveFile = controller.saveWithChooser(listModel, chooser, currentSaveFile, this);
-            setFileLabel(currentSaveFile.getName());
+            if (currentSaveFile != null) {
+                setFileLabel(currentSaveFile.getName());
+            }
         });
 
         final JMenuItem saveMenu = new JMenuItem("Save");
@@ -88,6 +90,8 @@ class Window extends JFrame {
                     }
 
                     reader.close();
+
+                    setFileLabel(currentSaveFile.getName());
                 } catch (IOException io) {
                     io.printStackTrace();
                 }
@@ -106,6 +110,24 @@ class Window extends JFrame {
 
         menuBar.add(fileMenu);
         return menuBar;
+    }
+
+    private JPanel fileLabel() {
+        filePanel = new JPanel();
+        filePanel.setLayout(new BorderLayout());
+
+        final JButton closeBtn = new JButton("Close File");
+        closeBtn.addActionListener(e -> {
+            currentSaveFile = null;
+            fileLabel.setText("");
+            filePanel.setVisible(false);
+        });
+
+        filePanel.add(fileLabel, BorderLayout.WEST);
+        filePanel.add(closeBtn, BorderLayout.EAST);
+
+        filePanel.setVisible(false);
+        return filePanel;
     }
 
     private JPanel createControls() {
@@ -185,6 +207,6 @@ class Window extends JFrame {
 
     private void setFileLabel(final String name) {
         fileLabel.setText("Current File: " + name);
-        fileLabel.setVisible(true);
+        filePanel.setVisible(true);
     }
 }
