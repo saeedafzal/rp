@@ -1,21 +1,29 @@
 package com.hknight.lunch;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-
-import static com.hknight.lunch.Controller.log;
+import java.awt.event.ActionEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 class Window extends JFrame {
 
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
     private final Controller controller = new Controller();
     private JList<String> list;
-    private JLabel label;
+    private JLabel label, fileLabel = new JLabel();
+    private File currentSaveFile;
+    private JPanel filePanel;
 
     Window() {
         setTitle("Lunch Picker");
         setSize(450, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        setJMenuBar(createMenuBar());
 
         final JPanel contentPane = new JPanel();
         contentPane.setLayout(new BorderLayout());
@@ -24,8 +32,102 @@ class Window extends JFrame {
         splitPane.setLeftComponent(createControls());
         splitPane.setRightComponent(createRightPanel());
 
+        contentPane.add(fileLabel(), BorderLayout.NORTH);
         contentPane.add(splitPane, BorderLayout.CENTER);
         setContentPane(contentPane);
+    }
+
+    private JMenuBar createMenuBar() {
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File(System.getProperties().getProperty("user.home")));
+        chooser.setFileFilter(new FileNameExtensionFilter("Lunch lists", "lunch"));
+
+        final JMenuBar menuBar = new JMenuBar();
+
+        final JMenu fileMenu = new JMenu("File");
+        final JMenuItem saveAsMenu = new JMenuItem("Save As...");
+        saveAsMenu.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() + ActionEvent.SHIFT_MASK));
+        saveAsMenu.addActionListener(e -> {
+            currentSaveFile = controller.saveWithChooser(listModel, chooser, currentSaveFile, this);
+            if (currentSaveFile != null) {
+                setFileLabel(currentSaveFile.getName());
+            }
+        });
+
+        final JMenuItem saveMenu = new JMenuItem("Save");
+        saveMenu.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        saveMenu.addActionListener(e -> {
+            if (currentSaveFile != null) {
+                try {
+                    controller.writeToFile(listModel, currentSaveFile);
+                } catch (IOException io) {
+                    io.printStackTrace();
+                }
+            } else {
+                currentSaveFile = controller.saveWithChooser(listModel, chooser, currentSaveFile, this);
+                setFileLabel(currentSaveFile.getName());
+            }
+        });
+
+        final JMenuItem open = new JMenuItem("Open");
+        open.addActionListener(e -> {
+            final int val = chooser.showOpenDialog(this);
+
+            if (val == JFileChooser.APPROVE_OPTION) {
+                currentSaveFile = chooser.getSelectedFile();
+
+                try (final FileReader fileReader = new FileReader(currentSaveFile)) {
+                    final BufferedReader reader = new BufferedReader(fileReader);
+
+                    String line = reader.readLine();
+
+                    if (line != null) listModel.clear();
+                    while (line != null) {
+                        System.out.println(line);
+                        listModel.addElement(line);
+
+                        line = reader.readLine();
+                    }
+
+                    reader.close();
+
+                    setFileLabel(currentSaveFile.getName());
+                } catch (IOException io) {
+                    io.printStackTrace();
+                }
+            }
+        });
+
+        final JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.addActionListener(e -> System.exit(0));
+
+        fileMenu.add(saveMenu);
+        fileMenu.add(saveAsMenu);
+        fileMenu.addSeparator();
+        fileMenu.add(open);
+        fileMenu.addSeparator();
+        fileMenu.add(exitItem);
+
+        menuBar.add(fileMenu);
+        return menuBar;
+    }
+
+    private JPanel fileLabel() {
+        filePanel = new JPanel();
+        filePanel.setLayout(new BorderLayout());
+
+        final JButton closeBtn = new JButton("Close File");
+        closeBtn.addActionListener(e -> {
+            currentSaveFile = null;
+            fileLabel.setText("");
+            filePanel.setVisible(false);
+        });
+
+        filePanel.add(fileLabel, BorderLayout.WEST);
+        filePanel.add(closeBtn, BorderLayout.EAST);
+
+        filePanel.setVisible(false);
+        return filePanel;
     }
 
     private JPanel createControls() {
@@ -46,7 +148,6 @@ class Window extends JFrame {
             if (index != -1) {
                 listModel.removeElementAt(index);
             }
-
         });
 
         final JButton clearBtn = new JButton("Clear");
@@ -102,5 +203,10 @@ class Window extends JFrame {
 
         panel.add(label, BorderLayout.CENTER);
         return panel;
+    }
+
+    private void setFileLabel(final String name) {
+        fileLabel.setText("Current File: " + name);
+        filePanel.setVisible(true);
     }
 }
