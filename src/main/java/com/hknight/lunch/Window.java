@@ -4,14 +4,17 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 class Window extends JFrame {
 
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
     private final Controller controller = new Controller();
     private JList<String> list;
-    private JLabel label;
+    private JLabel label, fileLabel = new JLabel();
     private File currentSaveFile;
 
     Window() {
@@ -28,6 +31,8 @@ class Window extends JFrame {
         splitPane.setLeftComponent(createControls());
         splitPane.setRightComponent(createRightPanel());
 
+        fileLabel.setVisible(false);
+        contentPane.add(fileLabel, BorderLayout.NORTH);
         contentPane.add(splitPane, BorderLayout.CENTER);
         setContentPane(contentPane);
     }
@@ -42,7 +47,10 @@ class Window extends JFrame {
         final JMenu fileMenu = new JMenu("File");
         final JMenuItem saveAsMenu = new JMenuItem("Save As...");
         saveAsMenu.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() + ActionEvent.SHIFT_MASK));
-        saveAsMenu.addActionListener(e -> currentSaveFile = controller.saveWithChooser(listModel, chooser, currentSaveFile, this));
+        saveAsMenu.addActionListener(e -> {
+            currentSaveFile = controller.saveWithChooser(listModel, chooser, currentSaveFile, this);
+            setFileLabel(currentSaveFile.getName());
+        });
 
         final JMenuItem saveMenu = new JMenuItem("Save");
         saveMenu.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
@@ -55,6 +63,7 @@ class Window extends JFrame {
                 }
             } else {
                 currentSaveFile = controller.saveWithChooser(listModel, chooser, currentSaveFile, this);
+                setFileLabel(currentSaveFile.getName());
             }
         });
 
@@ -65,7 +74,7 @@ class Window extends JFrame {
             if (val == JFileChooser.APPROVE_OPTION) {
                 currentSaveFile = chooser.getSelectedFile();
 
-                try(final FileReader fileReader = new FileReader(currentSaveFile)) {
+                try (final FileReader fileReader = new FileReader(currentSaveFile)) {
                     final BufferedReader reader = new BufferedReader(fileReader);
 
                     String line = reader.readLine();
@@ -117,7 +126,6 @@ class Window extends JFrame {
             if (index != -1) {
                 listModel.removeElementAt(index);
             }
-
         });
 
         final JButton clearBtn = new JButton("Clear");
@@ -173,5 +181,10 @@ class Window extends JFrame {
 
         panel.add(label, BorderLayout.CENTER);
         return panel;
+    }
+
+    private void setFileLabel(final String name) {
+        fileLabel.setText("Current File: " + name);
+        fileLabel.setVisible(true);
     }
 }
