@@ -32,7 +32,11 @@ class Controller {
     }
 
     void writeToFile(final DefaultListModel listModel, final File currentSaveFile) throws IOException {
-        final FileWriter writer = new FileWriter(currentSaveFile + ".lunch");
+        String postFix = "";
+        if (!currentSaveFile.getName().contains(".lunch")) {
+            postFix = ".lunch";
+        }
+        final FileWriter writer = new FileWriter(currentSaveFile + postFix);
         for (int i=0; i < listModel.toArray().length; i++) {
             if (listModel.toArray().length == (i+1)) {
                 writer.write((String) listModel.toArray()[i]);

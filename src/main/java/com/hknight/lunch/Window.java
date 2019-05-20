@@ -1,10 +1,10 @@
 package com.hknight.lunch;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
 class Window extends JFrame {
 
@@ -35,6 +35,7 @@ class Window extends JFrame {
     private JMenuBar createMenuBar() {
         final JFileChooser chooser = new JFileChooser();
         chooser.setCurrentDirectory(new File(System.getProperties().getProperty("user.home")));
+        chooser.setFileFilter(new FileNameExtensionFilter("Lunch lists", "lunch"));
 
         final JMenuBar menuBar = new JMenuBar();
 
@@ -57,11 +58,40 @@ class Window extends JFrame {
             }
         });
 
+        final JMenuItem open = new JMenuItem("Open");
+        open.addActionListener(e -> {
+            final int val = chooser.showOpenDialog(this);
+
+            if (val == JFileChooser.APPROVE_OPTION) {
+                currentSaveFile = chooser.getSelectedFile();
+
+                try(final FileReader fileReader = new FileReader(currentSaveFile)) {
+                    final BufferedReader reader = new BufferedReader(fileReader);
+
+                    String line = reader.readLine();
+
+                    if (line != null) listModel.clear();
+                    while (line != null) {
+                        System.out.println(line);
+                        listModel.addElement(line);
+
+                        line = reader.readLine();
+                    }
+
+                    reader.close();
+                } catch (IOException io) {
+                    io.printStackTrace();
+                }
+            }
+        });
+
         final JMenuItem exitItem = new JMenuItem("Exit");
         exitItem.addActionListener(e -> System.exit(0));
 
         fileMenu.add(saveMenu);
         fileMenu.add(saveAsMenu);
+        fileMenu.addSeparator();
+        fileMenu.add(open);
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
 
