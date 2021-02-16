@@ -1,16 +1,20 @@
-package com.hknight.lunch;
+package com.saeed.rp;
 
-import javax.swing.*;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
-class Launch {
+import com.saeed.rp.ui.Window;
+
+import static javax.swing.UIManager.getSystemLookAndFeelClassName;
+
+public class Launch {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
+                UIManager.setLookAndFeel(getSystemLookAndFeelClassName());
+
                 final Window window = new Window();
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                SwingUtilities.updateComponentTreeUI(window);
-                window.setLocationRelativeTo(null);
                 window.setVisible(true);
             } catch (Exception e) {
                 e.printStackTrace();
