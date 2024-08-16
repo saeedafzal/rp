@@ -3,3 +3,4 @@ target
 *.iml
 bin
 *.lunch
+.DS_STORE
