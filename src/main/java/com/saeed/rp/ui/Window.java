@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 import static com.formdev.flatlaf.util.SystemInfo.isMacFullWindowContentSupported;
 
-public class WindowTwo extends JFrame {
+public class Window extends JFrame {
 
     private static final String TITLE = "RP";
     private static final int WIDTH = 600;
@@ -19,7 +19,7 @@ public class WindowTwo extends JFrame {
     private final JLabel statusBarLabel;
     private final Supplier<String> addItemDialogSupplier;
 
-    public WindowTwo() {
+    public Window() {
         itemsListModel = new DefaultListModel<>();
         itemList = new JList<>(itemsListModel);
         resultLabel = new JLabel("Add item...");

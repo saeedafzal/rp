@@ -1,6 +1,6 @@
 package com.saeed.rp;
 
-import com.saeed.rp.ui.WindowTwo;
+import com.saeed.rp.ui.Window;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
@@ -26,6 +26,6 @@ public class Launcher {
         new ThemeHandler().init();
 
         // Show window
-        SwingUtilities.invokeLater(WindowTwo::new);
+        SwingUtilities.invokeLater(Window::new);
     }
 }
